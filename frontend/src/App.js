@@ -89,7 +89,7 @@ function App() {
       {isAuthenticated && (
         <>
           <p>Bem-vindo, {user.name}</p>
-          <button onClick={() => logout({ returnTo: window.location.origin })}>Logout</button>
+          <button onClick={() => logout({ returnTo: 'https://crud-nuvem-unifor-1.onrender.com' })}>Logout</button>
         </>
       )}
 
