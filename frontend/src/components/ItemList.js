@@ -8,8 +8,8 @@ function ItemList({ items, onEdit, onDelete }) {
         {items.map((item, index) => (
           <li key={index}>
             {item.nome} 
-            <button onClick={() => onEdit(index)}>Editar</button>
-            <button onClick={() => onDelete(index)}>Excluir</button>
+            <button onClick={() => onEdit(item)}>Editar</button>
+            <button onClick={() => onDelete(item)}>Excluir</button>
           </li>
         ))}
       </ul>
