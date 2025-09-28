@@ -6,7 +6,7 @@ function App() {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
 
-  const API_URL = 'http://localhost:3001/items';
+  const API_URL = 'https://crud-nuvem-unifor.onrender.com/items';
 
   // Fetch inicial
   useEffect(() => {
