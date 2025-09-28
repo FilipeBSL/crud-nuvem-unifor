@@ -1,15 +1,17 @@
 import React from 'react';
 
-function ItemList({ items, onEdit, onDelete }) {
+function ItemList({ items, onEdit, onDelete, disabled }) {
+  if (items.length === 0) return <p>Nenhum item cadastrado.</p>;
+
   return (
     <div>
       <h2>Lista de Itens</h2>
-      <ul>
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.nome} 
-            <button onClick={() => onEdit(item)}>Editar</button>
-            <button onClick={() => onDelete(item)}>Excluir</button>
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {items.map((item) => (
+          <li key={item.id} style={{ marginBottom: '8px' }}>
+            {item.nome}{' '}
+            <button onClick={() => onEdit(item)} disabled={disabled}>Editar</button>{' '}
+            <button onClick={() => onDelete(item)} disabled={disabled}>Excluir</button>
           </li>
         ))}
       </ul>

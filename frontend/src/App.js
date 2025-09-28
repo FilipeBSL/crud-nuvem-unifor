@@ -1,4 +1,3 @@
-// frontend/src/App.js
 import React, { useState, useEffect } from 'react';
 import ItemList from './components/ItemList';
 import ItemForm from './components/ItemForm';
@@ -7,6 +6,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 function App() {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const API_URL = 'https://crud-nuvem-unifor.onrender.com/items';
 
@@ -17,54 +17,72 @@ function App() {
     if (!isAuthenticated) return;
 
     const fetchItems = async () => {
+      setLoading(true);
       try {
-        // Obtenha token se quiser proteger API
-        // const token = await getAccessTokenSilently();
-        const res = await fetch(API_URL /*, { headers: { Authorization: `Bearer ${token}` } } */);
+        const token = await getAccessTokenSilently();
+        const res = await fetch(API_URL, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
         setItems(data);
       } catch (err) {
         console.error(err);
+        alert('Erro ao carregar itens');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchItems();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, getAccessTokenSilently]);
 
+  // Salvar item
   const handleSave = async (item) => {
-    if (!isAuthenticated) return alert("Faça login para salvar itens");
+    if (!isAuthenticated) return alert('Faça login para salvar itens');
 
-    if (editingItem) {
-      const res = await fetch(`${API_URL}/${editingItem.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' /*, Authorization: `Bearer ${token}` */ },
-        body: JSON.stringify(item),
-      });
-      const updated = await res.json();
-      setItems(items.map(i => i.id === updated.id ? updated : i));
-      setEditingItem(null);
-    } else {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' /*, Authorization: `Bearer ${token}` */ },
-        body: JSON.stringify(item),
-      });
-      const newItem = await res.json();
-      setItems([...items, newItem]);
+    try {
+      const token = await getAccessTokenSilently();
+      let res, data;
+
+      if (editingItem) {
+        res = await fetch(`${API_URL}/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(item)
+        });
+        data = await res.json();
+        setItems(items.map(i => i.id === data.id ? data : i));
+        setEditingItem(null);
+      } else {
+        res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(item)
+        });
+        data = await res.json();
+        setItems([...items, data]);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar item');
     }
   };
 
   const handleEdit = (item) => setEditingItem(item);
 
   const handleDelete = async (item) => {
-    if (!isAuthenticated) return alert("Faça login para deletar itens");
+    if (!isAuthenticated) return alert('Faça login para deletar itens');
 
-    await fetch(`${API_URL}/${item.id}`, { method: 'DELETE' /*, headers: { Authorization: `Bearer ${token}` } */ });
-    setItems(items.filter(i => i.id !== item.id));
+    try {
+      const token = await getAccessTokenSilently();
+      await fetch(`${API_URL}/${item.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      setItems(items.filter(i => i.id !== item.id));
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao deletar item');
+    }
   };
 
   return (
-    <div>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>CRUD em Nuvem - Unifor</h1>
 
       {!isAuthenticated && <button onClick={() => loginWithRedirect()}>Login</button>}
@@ -75,8 +93,15 @@ function App() {
         </>
       )}
 
-      <ItemForm onSave={handleSave} editingItem={editingItem} />
-      <ItemList items={items} onEdit={handleEdit} onDelete={handleDelete} />
+      {isAuthenticated ? (
+        <>
+          {loading && <p>Carregando itens...</p>}
+          <ItemForm onSave={handleSave} editingItem={editingItem} disabled={loading} />
+          <ItemList items={items} onEdit={handleEdit} onDelete={handleDelete} disabled={loading} />
+        </>
+      ) : (
+        <p>Faça login para visualizar e gerenciar os itens.</p>
+      )}
     </div>
   );
 }
